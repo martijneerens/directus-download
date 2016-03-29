@@ -3,11 +3,13 @@ var fs = require('fs');
 var _ = require('underscore');
 var Download = require('download');
 var async = require('async');
+var Papa = require('papaparse');
 
 var attachmentRegex = /https?:\/\/fieldbook.com\/attachments/g;
 var defaultOpts = {
     dataPath : 'data.json',
     mediaPath : './media/',
+    csvPath : false,
     skipExistingFiles : true
 };
 var opts = {};
@@ -75,6 +77,12 @@ function downloadMediaFromRecords(records, finalCallback) {
     async.parallel(downloads, finalCallback);
 }
 
+function downloadCsv(sheet, id) {
+    var csv = Papa.unparse(sheet);
+    var path = opts.csvPath + id + '.csv';
+    fs.writeFile(path, csv, 'utf-8', () => console.log('Downloaded ' + path));
+}
+
 function download(userOpts) {
     opts = _.extend(defaultOpts, userOpts);
 
@@ -83,9 +91,13 @@ function download(userOpts) {
     getBook(opts.bookId, (book) => {
         console.log("Got book");
 
+        if (opts.csvPath) {
+            _.each(book, downloadCsv);
+        }
+
         async.each(_.values(book), downloadMediaFromRecords, () => {
             fs.writeFile(opts.dataPath, JSON.stringify(book,null,4), 'utf-8', () => {
-                console.log("Written JSON file");
+                console.log("Written JSON file at " + opts.dataPath);
                 opts.callback();
             });
         });
