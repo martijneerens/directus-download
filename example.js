@@ -6,6 +6,7 @@ fbdownload({
     dataPath : 'data.json',
     mediaPath : './media/',
     skipExistingFiles : true,
+    prettifyJson : true,
     callback : function() {
         console.log('ready');
     }

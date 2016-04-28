@@ -10,7 +10,8 @@ var defaultOpts = {
     dataPath : 'data.json',
     mediaPath : './media/',
     csvPath : false,
-    skipExistingFiles : true
+    skipExistingFiles : true,
+    prettifyJson : false
 };
 var opts = {};
 
@@ -83,6 +84,14 @@ function downloadCsv(sheet, id) {
     fs.writeFile(path, csv, 'utf-8', () => console.log('Downloaded ' + path));
 }
 
+function stringifyJson(data) {
+    if (opts.prettifyJson) {
+        return JSON.stringify(data, null, 4);
+    } else {
+        return JSON.stringify(data);
+    }
+}
+
 function download(userOpts) {
     opts = _.extend(defaultOpts, userOpts);
 
@@ -96,7 +105,7 @@ function download(userOpts) {
         }
 
         async.each(_.values(book), downloadMediaFromRecords, () => {
-            fs.writeFile(opts.dataPath, JSON.stringify(book,null,4), 'utf-8', () => {
+            fs.writeFile(opts.dataPath, stringifyJson(book), 'utf-8', () => {
                 console.log("Written JSON file at " + opts.dataPath);
                 opts.callback();
             });
