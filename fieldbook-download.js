@@ -5,7 +5,7 @@ var Download = require('download');
 var async = require('async');
 var Papa = require('papaparse');
 
-var attachmentRegex = /https?:\/\/fieldbook.com\/attachments/g;
+var attachmentRegex = /https?:\/\/fieldbook.com\/attachments/;
 var defaultOpts = {
     dataPath : 'data.json',
     mediaPath : './media/',
