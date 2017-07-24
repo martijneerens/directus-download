@@ -10,7 +10,8 @@ const MEDIA_FILENAME_KEY = '$mediaFilename$';
 
 const defaultOpts = {
     dataPath : 'data.json',
-    mediaPath : './media/',
+    mediaPath : './media/', // This is used for saving the file
+    mediaBookPath : 'media/', // And this is used for replacing
     csvPath : false,
     skipExistingFiles : true,
     prettifyJson : false
@@ -75,12 +76,15 @@ class FieldbookDownload {
                     const externalUrl = val;
                     const filename = externalUrl.split('/').slice(-2).join('-');
                     const localPath = `${this.opts.mediaPath}${filename}`;
+                    const localBookPath = `${this.opts.mediaBookPath}${filename}`;
 
                     record[MEDIA_URL_KEY + key] = externalUrl;
                     record[MEDIA_FILENAME_KEY + key] = filename;
-                    record[key] = localPath;
+                    record[key] = localBookPath;
 
-                    this.media.push({ externalUrl, filename, localPath });
+                    this.media.push({
+                        externalUrl, filename, localPath, localBookPath
+                    });
                 }
             }
         }
