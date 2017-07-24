@@ -1,7 +1,7 @@
 {
   "name": "fieldbook-download",
   "description": "Downloads all sheets in a Fieldbook and all images",
-  "version": "0.5.0-alpha",
+  "version": "0.5.0",
   "main": "fieldbook-download.js",
   "dependencies": {
     "async": "^1.5.2",
