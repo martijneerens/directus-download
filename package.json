@@ -1,13 +1,13 @@
 {
   "name": "fieldbook-download",
   "description": "Downloads all sheets in a Fieldbook and all images",
-  "version": "0.4.1",
+  "version": "0.5.0-alpha",
   "main": "fieldbook-download.js",
   "dependencies": {
     "async": "^1.5.2",
     "dataplugger": "^0.1.0",
     "download": "^4.4.3",
-    "papaparse": "^4.1.2",
+    "papaparse": "^4.1.2"
   },
   "devDependencies": {
     "grunt-bump": "^0.7.0",
