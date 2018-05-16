@@ -1,7 +1,7 @@
 {
   "name": "airtable-download",
   "description": "Downloads all tables in an Airtable base and all images.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "main": "airtable-download.js",
   "dependencies": {
     "airtable": "^0.5.4",
