@@ -218,7 +218,7 @@ class AirtablesDownload {
                     that.writeBook(that.book);
 
                     if (that.opts.csvPath) {
-                        that.downloadCsv(that);
+                        that.downloadCsv(that.book);
                     }
 
                     that.downloadMedia()
