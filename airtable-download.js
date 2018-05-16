@@ -4,7 +4,7 @@ const Download = require('download');
 const async = require('async');
 const Papa = require('papaparse');
 
-const attachmentRegex = /https?:\/\/fieldbook.com\/attachments/;
+const attachmentRegex = /https?:\/\/dl.airtable.com/;
 const MEDIA_URL_KEY = '$mediaUrl$';
 const MEDIA_FILENAME_KEY = '$mediaFilename$';
 

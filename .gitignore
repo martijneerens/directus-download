@@ -2,3 +2,7 @@ yarn.lock
 myexample.js
 node_modules
 .DS_Store
+data
+media
+airtable.js
+package-lock.json

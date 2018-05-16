@@ -1,12 +1,14 @@
 {
-  "name": "fieldbook-download",
-  "description": "Downloads all sheets in a Fieldbook and all images",
-  "version": "0.5.0",
-  "main": "fieldbook-download.js",
+  "name": "airtable-download",
+  "description": "Downloads all tables in an Airtable base and all images.",
+  "version": "0.6.1",
+  "main": "airtable-download.js",
   "dependencies": {
+    "airtable": "^0.5.4",
     "async": "^1.5.2",
     "dataplugger": "^0.1.0",
     "download": "^4.4.3",
+    "grunt": "^1.0.2",
     "papaparse": "^4.1.2"
   },
   "devDependencies": {
