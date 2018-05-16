@@ -1,8 +1,8 @@
 var atdownload = require('./airtable-download');
 
 atdownload({
-    baseId: 'appmLNhw9FR8YeN0M',
-    apiKey: 'keyqG8OTabXl8GpPI',
+    baseId: 'baseKeyHere',
+    apiKey: 'apiKeyHere',
     dataPath: './data/data.json',
     mediaPath: './media/', // This is used for saving the file
     mediaBookPath: 'media/', // And this is used for replacing
