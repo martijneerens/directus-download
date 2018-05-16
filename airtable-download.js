@@ -1,4 +1,3 @@
-const DataPlugger = require('dataplugger');
 const fs = require('fs');
 const Download = require('download');
 const async = require('async');
@@ -14,27 +13,20 @@ const defaultOpts = {
     mediaBookPath : 'media/', // And this is used for replacing
     csvPath : false,
     skipExistingFiles : true,
-    prettifyJson : false
+    prettifyJson : false,
 };
 
-class FieldbookDownload {
-    constructor(bookId, opts) {
-        this.bookId = bookId;
+class AirtableDownload {
+    
+    constructor(baseId, apiKey, opts) {
+        this.baseId = baseId;
+        this.apiKey = apiKey;
         this.opts = Object.assign({}, defaultOpts, opts);
         this.media = [];
         this.book = {};
-    }
-
-    getBook(callback) {
-        const dataplugger = new DataPlugger({
-            'fieldbook' : {
-                book : this.bookId
-            }
-        });
-
-        dataplugger.setDefaultPlug('fieldbook');
-
-        dataplugger.load(callback);
+        this.tableIndex = 0;
+        this.tables = opts.tables;
+        this.tableCount = opts.tables.length;
     }
 
     fileExists(filename, callback) {
@@ -54,41 +46,32 @@ class FieldbookDownload {
         });
     }
 
-    // Check for Fieldbook attachment links, transform them to local urls
-    // and add a downloadable link to the book
-    parseMedia(book) {
-        this.book = book;
+    parseFiles(field){
+		if(field && field.length && field.length > 0 && field[0].thumbnails){
+	        let val;
+	        let externalUrl = val = field[0].url;
 
-        // Can't we decrease these three loops someway?
-        for (let sheetKey in book) {
-            let sheet = book[sheetKey];
+	        if (!attachmentRegex.test(val)) {
+	            return val;
+	        }
 
-            for (let record of sheet) {
-                for (let key in record) {
-                    let val = record[key];
+	        // We've got a media attachment, transform to something
+	        // new, and add the old url to the book
+	        const filename = externalUrl.split('/').slice(-1);
+	        const localPath = `${this.opts.mediaPath}${filename}`;
+	        const localBookPath = `${this.opts.mediaBookPath}${filename}`;
 
-                    if (!attachmentRegex.test(val)) {
-                        continue;
-                    }
+	        this.media.push({
+	            externalUrl, filename, localPath, localBookPath
+	        });
 
-                    // We've got a media attachment, transform to something
-                    // new, and add the old url to the book
-                    const externalUrl = val;
-                    const filename = externalUrl.split('/').slice(-2).join('-');
-                    const localPath = `${this.opts.mediaPath}${filename}`;
-                    const localBookPath = `${this.opts.mediaBookPath}${filename}`;
+			return localBookPath;
+		}
+		else{
+			return field;
+		}
+	}
 
-                    record[MEDIA_URL_KEY + key] = externalUrl;
-                    record[MEDIA_FILENAME_KEY + key] = filename;
-                    record[key] = localBookPath;
-
-                    this.media.push({
-                        externalUrl, filename, localPath, localBookPath
-                    });
-                }
-            }
-        }
-    }
 
     downloadMedia() {
         let downloads = [];
@@ -157,25 +140,101 @@ class FieldbookDownload {
     }
 
     start() {
-        console.log(`Getting ${this.bookId}`);
+		this.Airtable = require('airtable');
+		this.Airtable.configure({
+		    endpointUrl: 'https://api.airtable.com',
+		    apiKey: this.apiKey
+		});
+		this.base = this.Airtable.base(this.baseId);
 
-        this.getBook((book) => {
-            console.log("Got book");
+        console.log(`Getting ${this.baseId} -> ${this.tableCount} tables`);
 
-            if (this.opts.csvPath) {
-                this.downloadCsv(book);
-            }
+        //loop through all tables in base / options object
+		this.tables.forEach(table => {
+			let data = [];
+			let basetable = this.base(table);
+			let that = this;
 
-            this.parseMedia(book);
+			basetable.select({
+			 view: "Grid view",
 
-            this.downloadMedia()
-                .then(this.writeBook.bind(this))
-                .then(this.opts.callback);
-        });
+			}).eachPage(function page(records, fetchNextPage) {
+
+			    // This function (`page`) will get called for each page of records.
+			    records.forEach(record => {
+			        let fields = {};
+			        
+		        	for (let field in record.fields) {
+						fields[field] = that.parseFiles(record.fields[field]);
+			        	
+						//add internal ID if not present in table fields
+			        	if(!fields.id) {
+			        		fields.id = record.id;
+			        	}
+			        };
+			        if(that.opts.addCreatedTime){
+						fields.createdTime = record._rawJson.createdTime;
+			        }
+
+				    // upload attachments to airtable
+				    if(that.opts.updateAttachments && table === that.opts.updateAttachments.table){
+				    	let fileSrc = that.opts.updateAttachments.filesrc;
+				    	let fileTarget = that.opts.updateAttachments.filetarget;
+
+
+				    	let newItemObj = fields;
+				    	delete fields.id;
+				    	if(fields[fileSrc]){
+
+					    	newItemObj[fileTarget] = [
+							     {
+							       "url": fields[fileSrc]
+							     }
+							   ];
+
+					      	basetable.replace(record.id, newItemObj, function(err, record) {
+							    if (err) { console.error(err); return; }
+							    console.log(record.get('type'));
+							 });
+				    	}
+				    }
+			        
+			        data.push(fields);
+			    });
+
+			    // To fetch the next page of records, call `fetchNextPage`.
+			    // If there are more records, `page` will get called again.
+			    // If there are no more records, `done` will get called.
+			    fetchNextPage();
+
+			}, function done(err) {
+			    that.book[table] = data;
+			    that.tableIndex++;
+			    console.log('done fetching table ', table);
+
+			    // When all tables have been fetched an parsed,
+			    // output JSON, CSV files and download media
+			    if(that.tableIndex >= that.tableCount){
+			    	that.writeBook(that.book);
+			    	
+	            if (that.opts.csvPath) {
+	                that.downloadCsv(that);
+	            }
+					
+            	that.downloadMedia()
+                	.then(that.opts.callback);
+
+		    	}
+			    if (err) { 
+			    	console.error(err); return; 
+			    }
+			});
+		});
+
     }
 };
 
 module.exports = function(opts) {
-    const fbdownload = new FieldbookDownload(opts.bookId, opts);
-    fbdownload.start();
+    const atdownload = new AirtableDownload(opts.baseId, opts.apiKey, opts);
+    atdownload.start();
 }

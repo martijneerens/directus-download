@@ -1,13 +1,29 @@
-var fbdownload = require('./fieldbook-download');
+var atdownload = require('./airtable-download');
 
-fbdownload({
-    bookId : 'your-book-id-here',
-    csvPath : './csv/',
-    dataPath : 'data.json',
-    mediaPath : './media/',
+atdownload({
+    baseId : 'appmLNhw9FR8YeN0M',
+    apiKey: 'keyqG8OTabXl8GpPI',
+	dataPath : './data/data.json',
+	mediaPath : './media/', // This is used for saving the file
+	mediaBookPath : 'media/', // And this is used for replacing
+    csvPath : false,//'./data/',
     skipExistingFiles : true,
     prettifyJson : true,
+
+	// This can be used to upload / migrate images from 1 field to another
+
+	/* updateAttachments:{ 
+	 	filesrc: 'imagesrc',
+	 	filetarget: 'image',
+	 	table: 'blocks'
+	 },
+    */
+
+    tables: [
+    	'meta',
+    	'blocks'
+    ],
     callback : function() {
-        console.log('ready');
+        console.log('this is ready');
     }
 });
