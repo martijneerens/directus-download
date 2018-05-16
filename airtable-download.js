@@ -16,7 +16,7 @@ const defaultOpts = {
     prettifyJson: false,
 };
 
-class AirtablesDownload {
+class AirtableDownload {
 
     constructor(baseId, apiKey, opts) {
         this.baseId = baseId;
@@ -236,6 +236,6 @@ class AirtablesDownload {
 };
 
 module.exports = function (opts) {
-    const atdownload = new AirtablesDownload(opts.baseId, opts.apiKey, opts);
+    const atdownload = new AirtableDownload(opts.baseId, opts.apiKey, opts);
     atdownload.start();
 }
