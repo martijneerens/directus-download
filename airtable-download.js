@@ -189,13 +189,15 @@ class AirtableDownload {
                                 }
                             ];
 
-                            basetable.replace(record.id, newItemObj, function (err, record) {
-                                if (err) {
-                                    console.error(err);
-                                    return;
-                                }
-                                console.log(record.get('type'));
+                            basetable.update(record.id, {
+                                [fileTarget] : [{
+                                    "url": fields[fileSrc]
+                                }]
+                            }, function(err, record) {
+                                if (err) { console.error(err); return; }
+                                console.log(record.get('id'));
                             });
+
                         }
                     }
 
