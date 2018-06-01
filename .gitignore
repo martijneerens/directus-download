@@ -1,5 +1,4 @@
 yarn.lock
-myexample.js
 node_modules
 .DS_Store
 data
@@ -8,4 +7,3 @@ media
 sketch.js
 package-lock.json
 .idea
-update-images.js

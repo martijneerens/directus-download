@@ -13,6 +13,7 @@ const defaultOpts = {
     useImageObjects: false, //return just the url for an image or
     items: [], //tables to be fetched from Directus API
     csvPath: false,
+    fieldbookCompatible: false,
     baseUrl: '',
     apiUrl: '',
     accessToken : false,
@@ -73,7 +74,7 @@ class DirectusDownload {
 
             //@todo: add thumbnail downloads
 
-            if (this.opts.useImageObjects) {
+            if (this.opts.useImageObjects || this.opts.fieldbookCompatible) {
                 return field;
             }
             else {
@@ -198,10 +199,24 @@ class DirectusDownload {
         }
         else {
             //single object
-            for (let field in res.data) {
-                fields[field] = this.parseFiles(res.data[field]);
+            if(this.opts.fieldbookCompatible){
+                console.log('is fieldbook compatible');
+                fields = [];
             }
-            itemdata.push(fields);
+            for (let field in res.data) {
+
+                if(this.opts.fieldbookCompatible){
+                    fields.push({
+                        'key' : field,
+                        'value' : this.parseFiles(res.data[field])
+                    });
+                }
+                else{
+                    fields[field] = this.parseFiles(res.data[field]);
+                }
+
+            }
+            itemdata = fields;
         }
 
 
