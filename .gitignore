@@ -3,8 +3,9 @@ myexample.js
 node_modules
 .DS_Store
 data
+data/
 media
-airtable.js
+sketch.js
 package-lock.json
 .idea
 update-images.js
