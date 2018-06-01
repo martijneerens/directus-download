@@ -1,7 +1,7 @@
 {
   "name": "directus-download",
   "description": "Downloads tables and images from a publicly accessible Directus API.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "directus-download.js",
   "dependencies": {
     "async": "^1.5.2",
