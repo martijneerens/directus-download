@@ -1,3 +1,3 @@
-Downloads all tables and images from an Airtable base. 
+Downloads all tables and images from a Directus API. 
 
-Based on https://github.com/hay/fieldbook-download
+Based on https://github.com/martijneerens/airtable-download
