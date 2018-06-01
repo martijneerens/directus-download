@@ -191,6 +191,7 @@ class DirectusDownload {
         //array of objects
         if (res.data.length) {
             res.data.forEach(record => {
+                fields = {};
                 for (let field in record) {
                     fields[field] = this.parseFiles(record[field]);
                 }
