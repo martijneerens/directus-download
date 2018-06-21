@@ -19,6 +19,7 @@ const defaultOpts = {
     accessToken : false,
     skipExistingFiles: true,
     prettifyJson: false,
+    depth: 3
 };
 
 class DirectusDownload {
@@ -154,6 +155,10 @@ class DirectusDownload {
             version: '1.1'
         }
 
+        let params = {
+            depth: this.opts.depth
+        }
+
         //only pass accesstoken when available in config
         if(this.opts.accessToken){
             apiOpts.accessToken =  this.opts.accessToken
@@ -165,7 +170,7 @@ class DirectusDownload {
             if (item.id && item.api) {
                 console.log(`getItem /${item.api}/${item.id} as ${item.name}`);
 
-                this.client.getItem(item.api, item.id)
+                this.client.getItem(item.api, item.id, params)
                     .then(res => {
                         this.fetchComplete(res, item.name);
                     })
@@ -174,7 +179,7 @@ class DirectusDownload {
             else {
                 console.log(`getItems /${item}`);
 
-                this.client.getItems(item)
+                this.client.getItems(item, params)
                     .then(res => {
                         this.fetchComplete(res, item);
                     })
@@ -193,7 +198,27 @@ class DirectusDownload {
             res.data.forEach(record => {
                 fields = {};
                 for (let field in record) {
-                    fields[field] = this.parseFiles(record[field]);
+                    let subfields = record[field];
+
+                    //check if this field is a nested collection
+                    if(subfields && subfields.meta && subfields.meta.type && subfields.meta.type === 'collection'){
+                        let childFields = [];
+                        if(subfields.data.length){
+                            console.log(`fetch ${subfields.data.length} children in nested table `);
+                        }
+                        subfields.data.forEach(child => {
+                            let childData = {};
+                            for (let childfield in child) {
+                                childData[childfield] = this.parseFiles(child[childfield]);
+                            };
+                            childFields.push(childData);
+                        });
+                        fields[field] = childFields;
+                    }
+                    else {
+                        fields[field] = this.parseFiles(record[field]);
+                    }
+
                 }
                 itemdata.push(fields);
             });
