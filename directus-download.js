@@ -16,10 +16,10 @@ const defaultOpts = {
     fieldbookCompatible: false,
     baseUrl: '',
     apiUrl: '',
-    accessToken : false,
+    accessToken: false,
     skipExistingFiles: true,
     prettifyJson: false,
-    depth: 3
+    depth: 10
 };
 
 class DirectusDownload {
@@ -160,8 +160,8 @@ class DirectusDownload {
         }
 
         //only pass accesstoken when available in config
-        if(this.opts.accessToken){
-            apiOpts.accessToken =  this.opts.accessToken
+        if (this.opts.accessToken) {
+            apiOpts.accessToken = this.opts.accessToken
         }
 
         this.client = new RemoteInstance(apiOpts);
@@ -201,17 +201,32 @@ class DirectusDownload {
                     let subfields = record[field];
 
                     //check if this field is a nested collection
-                    if(subfields && subfields.meta && subfields.meta.type && subfields.meta.type === 'collection'){
+                    if (subfields && subfields.meta && subfields.meta.type && subfields.meta.type === 'collection') {
                         let childFields = [];
-                        if(subfields.data.length){
+                        if (subfields.data.length) {
                             console.log(`fetch ${subfields.data.length} children in nested table `);
                         }
                         subfields.data.forEach(child => {
                             let childData = {};
                             for (let childfield in child) {
                                 childData[childfield] = this.parseFiles(child[childfield]);
-                            };
+
+                                //look for subchildren
+                                let subchild = child[childfield];
+
+                                if (subchild && subchild.meta && subchild.meta.type && subchild.meta.type === 'collection') {
+                                    console.log(`fetch ${subchild.data.length} in children of nested table`);
+                                    for (let subsubfield in subchild) {
+                                        let subchildData = {};
+                                        console.log('subsubfields', subchild[subsubfield]);
+
+                                        this.parseFiles(child[childfield]);
+                                    }
+                                }
+                            }
+                            ;
                             childFields.push(childData);
+
                         });
                         fields[field] = childFields;
                     }
@@ -225,19 +240,19 @@ class DirectusDownload {
         }
         else {
             //single object
-            if(this.opts.fieldbookCompatible){
+            if (this.opts.fieldbookCompatible) {
                 console.log('is fieldbook compatible');
                 fields = [];
             }
             for (let field in res.data) {
 
-                if(this.opts.fieldbookCompatible){
+                if (this.opts.fieldbookCompatible) {
                     fields.push({
-                        'key' : field,
-                        'value' : this.parseFiles(res.data[field])
+                        'key': field,
+                        'value': this.parseFiles(res.data[field])
                     });
                 }
-                else{
+                else {
                     fields[field] = this.parseFiles(res.data[field]);
                 }
 

@@ -5,7 +5,6 @@
   "main": "directus-download.js",
   "dependencies": {
     "async": "^1.5.2",
-    "dataplugger": "^0.1.0",
     "directus-sdk-javascript": "^2.11.1",
     "download": "^4.4.3",
     "grunt": "^1.0.2",
