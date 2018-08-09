@@ -19,7 +19,8 @@ const defaultOpts = {
     accessToken: false,
     skipExistingFiles: true,
     prettifyJson: false,
-    depth: 10
+    depth: 10,
+    limit: 10000
 };
 
 class DirectusDownload {
@@ -156,7 +157,8 @@ class DirectusDownload {
         }
 
         let params = {
-            depth: this.opts.depth
+            depth: this.opts.depth,
+            limit: this.opts.limit
         }
 
         //only pass accesstoken when available in config
