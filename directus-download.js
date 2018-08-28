@@ -51,6 +51,37 @@ class DirectusDownload {
         });
     }
 
+    findObjects(obj, targetProp, targetValue, finalResults) {
+
+        function getObject(theObject) {
+            let result = null;
+            if (theObject instanceof Array) {
+                for (let i = 0; i < theObject.length; i++) {
+                    getObject(theObject[i]);
+                }
+            } else {
+                for (let prop in theObject) {
+                    if (theObject.hasOwnProperty(prop)) {
+                        console.log(prop + ': ' + theObject[prop]);
+                        if (prop === targetProp) {
+                            console.log('--found id');
+                            if (theObject[prop] === targetValue) {
+                                console.log('----found prop', prop, ', ', theObject[prop]);
+                                finalResults.push(theObject);
+                            }
+                        }
+                        if (theObject[prop] instanceof Object || theObject[prop] instanceof Array) {
+                            getObject(theObject[prop]);
+                        }
+                    }
+                }
+            }
+        }
+
+        getObject(obj);
+
+    }
+
     parseFiles(field) {
         if (
             field &&
@@ -191,12 +222,40 @@ class DirectusDownload {
         });
     }
 
+    parseRecursiveFiles(fields) {
+        console.log('level deeper');
+
+        let data = {};
+        for (let item in fields) {
+            let field = fields[item];
+            if (field.meta && field.meta.type && field.meta.type === 'collection') {
+                data[item] = {
+                    data: this.parseRecursiveFiles(field.data)
+                }
+            }
+            else {
+                if(field.data && field.data.length){
+                    let fielddata = [];
+                    for (let child in field.data) {
+                        fielddata.push(this.parseFiles(child));
+                    }
+                    data[item] = fielddata;
+                }
+                else{
+                    data[item] = this.parseFiles(field);
+                }
+            }
+        }
+        return data;
+    }
+
     fetchComplete(res, item) {
         let itemdata = [];
         let fields = {};
 
         //array of objects
         if (res.data.length) {
+
             res.data.forEach(record => {
                 fields = {};
                 for (let field in record) {
@@ -246,6 +305,7 @@ class DirectusDownload {
                 console.log('is fieldbook compatible');
                 fields = [];
             }
+
             for (let field in res.data) {
 
                 if (this.opts.fieldbookCompatible) {
@@ -255,7 +315,22 @@ class DirectusDownload {
                     });
                 }
                 else {
-                    fields[field] = this.parseFiles(res.data[field]);
+                    if (res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection'){
+                        let childcontent = {};
+
+                        for (let child in res.data[field].data) {
+                            childcontent[child] = {};
+                            let subchild = res.data[field].data[child];
+
+                            for (let subsubchild in subchild) {
+                                let subsubchildContent = subchild[subsubchild];
+                                childcontent[child][subsubchild] = this.parseFiles(subsubchildContent);
+                            }
+                            childcontent[child] = this.parseFiles(res.data[field].data[child]);
+                        }
+                        fields[field] = childcontent;
+                    }
+                    else fields[field] = this.parseFiles(res.data[field]);
                 }
 
             }

@@ -5,6 +5,7 @@ dsdownload({
     mediaPath: './media/', // This is used for saving the file
     mediaBookPath: 'media/', // And this is used for replacing
     csvPath: false,
+    prettifyJson: false,
     skipExistingFiles: true,
     useImageObjects: false, //return full directus file object instead of the url as a string only
     baseUrl: '',
