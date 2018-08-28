@@ -328,7 +328,7 @@ class DirectusDownload {
                             }
                             childcontent[child] = this.parseFiles(res.data[field].data[child]);
                         }
-                        fields[field] = childcontent;
+                        fields[field] = { data: childcontent};
                     }
                     else fields[field] = this.parseFiles(res.data[field]);
                 }
