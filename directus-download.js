@@ -315,7 +315,7 @@ class DirectusDownload {
                     });
                 }
                 else {
-                    if (res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection'){
+                    if (res.data[field] && res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection'){
                         let childcontent = {};
 
                         for (let child in res.data[field].data) {
