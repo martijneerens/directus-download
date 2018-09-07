@@ -62,7 +62,7 @@ class DirectusDownload {
             } else {
                 for (let prop in theObject) {
                     if (theObject.hasOwnProperty(prop)) {
-                        console.log(prop + ': ' + theObject[prop]);
+                        // console.log(prop + ': ' + theObject[prop]);
                         if (prop === targetProp) {
                             console.log('--found id');
                             if (theObject[prop] === targetValue) {
@@ -88,34 +88,61 @@ class DirectusDownload {
             field.meta &&
             field.meta.table &&
             field.meta.table === "directus_files"
-            && field.meta.type === "item"
-            && field.data.url
         ) {
-            let url = field.data.url;
-            let externalUrl = this.opts.baseUrl + url;
-
-            const filename = field.data.name;
-            const localPath = `${this.opts.mediaPath}${filename}`;
-            const localBookPath = `${this.opts.mediaBookPath}${filename}`;
-
-            this.media.push({
-                externalUrl, filename, localPath, localBookPath
-            });
-
-            //set image url to local path
-            field.data.url = localBookPath;
-
-            //@todo: add thumbnail downloads
-
-            if (this.opts.useImageObjects || this.opts.fieldbookCompatible) {
-                return field;
+            if(field.meta.type === "item" && field.data.url){
+                return this.renameFile(field);
             }
-            else {
-                return localBookPath;
+            else if(field.meta.type === "collection"){
+                if(field.data && field.data.length) {
+                    console.log(`parse /${field.data.length} files!`);
+                    for (let file in field.data) {
+                        let subfile = this.renameFile(field.data[file]);
+                    }
+                }
+                return field;
             }
         }
         else {
             return field;
+        }
+    }
+
+    renameFile(field){
+        let url = field.url
+        if(field.data && field.data.url) {
+            url = field.data.url;
+        }
+        let externalUrl = this.opts.baseUrl + url;
+
+        let filename;
+        if(field.data && field.data.url) {
+            filename = field.data.name;
+        }
+        else{
+            filename = field.name;
+        }
+
+
+        const localPath = `${this.opts.mediaPath}${filename}`;
+        const localBookPath = `${this.opts.mediaBookPath}${filename}`;
+
+        this.media.push({
+            externalUrl, filename, localPath, localBookPath
+        });
+
+        //set image url to local path
+        if(field.data && field.data.url) {
+            field.data.url = localBookPath;
+        }
+        else {
+          field.url = localBookPath;
+        }
+
+        if (this.opts.useImageObjects || this.opts.fieldbookCompatible) {
+            return field;
+        }
+        else {
+            return localBookPath;
         }
     }
 
@@ -234,14 +261,14 @@ class DirectusDownload {
                 }
             }
             else {
-                if(field.data && field.data.length){
+                if (field.data && field.data.length) {
                     let fielddata = [];
                     for (let child in field.data) {
                         fielddata.push(this.parseFiles(child));
                     }
                     data[item] = fielddata;
                 }
-                else{
+                else {
                     data[item] = this.parseFiles(field);
                 }
             }
@@ -279,9 +306,13 @@ class DirectusDownload {
                                     console.log(`fetch ${subchild.data.length} in children of nested table`);
                                     for (let subsubfield in subchild) {
                                         let subchildData = {};
-                                        console.log('subsubfields', subchild[subsubfield]);
-
                                         this.parseFiles(child[childfield]);
+
+                                        let subsubchild = subchild[subsubfield];
+
+                                        if (subsubchild && subsubchild.meta && subsubchild.meta.type && subsubchild.meta.type === 'collection') {
+                                            console.log('we have subsubchildren!', subsubchild.data.length);
+                                        }
                                     }
                                 }
                             }
@@ -315,7 +346,7 @@ class DirectusDownload {
                     });
                 }
                 else {
-                    if (res.data[field] && res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection'){
+                    if (res.data[field] && res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection') {
                         let childcontent = {};
 
                         for (let child in res.data[field].data) {
@@ -325,10 +356,18 @@ class DirectusDownload {
                             for (let subsubchild in subchild) {
                                 let subsubchildContent = subchild[subsubchild];
                                 childcontent[child][subsubchild] = this.parseFiles(subsubchildContent);
+
+                                // if (subsubchildContent && subsubchildContent.meta && subsubchildContent.meta.type && subsubchildContent.meta.type === 'collection' && subsubchildContent.data.length) {
+                                //     console.log('we have subsubchildren!', subsubchildContent.data.length, ' :');
+                                //     for (let subsubsubchild in subsubchildContent.data) {
+                                //         let mysubchild = subsubchildContent.data[subsubsubchild];
+                                //         console.log(mysubchild);
+                                //     }
+                                // }
                             }
                             childcontent[child] = this.parseFiles(res.data[field].data[child]);
                         }
-                        fields[field] = { data: childcontent};
+                        fields[field] = {data: childcontent};
                     }
                     else fields[field] = this.parseFiles(res.data[field]);
                 }
