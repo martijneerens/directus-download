@@ -102,6 +102,9 @@ class DirectusDownload {
                 return field;
             }
         }
+        else if(field && field.storage_adapter){
+            return this.renameFile(field);
+        }
         else {
             return field;
         }
