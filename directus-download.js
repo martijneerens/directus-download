@@ -20,7 +20,8 @@ const defaultOpts = {
     skipExistingFiles: true,
     prettifyJson: false,
     depth: 10,
-    limit: 10000
+    limit: 10000,
+    downloadThumbnails: false
 };
 
 class DirectusDownload {
@@ -138,7 +139,7 @@ class DirectusDownload {
             field.data.url = localBookPath;
         }
         else {
-          field.url = localBookPath;
+            field.url = localBookPath;
         }
 
         if (this.opts.useImageObjects || this.opts.fieldbookCompatible) {
@@ -163,8 +164,32 @@ class DirectusDownload {
 
                         new Download().get(media.externalUrl).dest(this.opts.mediaPath).rename(media.filename).run(() => {
                             console.log(`Downloaded '${media.externalUrl}'`);
-                            downloadCallback();
                         });
+
+                        // Also download thumbnails if user wants to
+
+                        //Currently accepted thumbnail sizes, only square thumbs are currently supported
+                        const thumbnailSizes = [200,400,800];
+
+                        let parseThumbnailUrl = function(url, size) {
+                            if(url && url.includes('https://labs.volkskrant.nl/directus/storage/uploads/')) {
+                                return url.replace('https://labs.volkskrant.nl/directus/storage/uploads/', `https://labs.volkskrant.nl/directus/thumbnail/${size}/${size}/`)
+                            } else {
+                                return url
+                            }
+                        };
+
+                        if(thumbnailSizes.includes(this.opts.downloadThumbnails)) {
+                            console.log(`Going to download thumbnail for ${media.externalUrl}`);
+
+                            new Download().get(parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
+                                console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
+                            });
+                        } else {
+                            console.log(`Thumbnailing at size ${this.opts.downloadThumbnails} is currently not supported, use one of the following instead: ${thumbnailSizes}`)
+                        }
+
+                        downloadCallback();
                     }
                 });
             });
