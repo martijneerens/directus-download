@@ -424,7 +424,7 @@ class DirectusDownload {
         }
 
         this.downloadMedia()
-            .then(this.opts.callback);
+            .then(this.opts.callback(data));
 
     }
 };
