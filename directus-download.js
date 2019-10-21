@@ -21,7 +21,7 @@ const defaultOpts = {
     prettifyJson: false,
     depth: 10,
     limit: 10000,
-    downloadThumbnails: false
+    downloadThumbnails: 400
 };
 
 class DirectusDownload {
@@ -90,11 +90,10 @@ class DirectusDownload {
             field.meta.table &&
             field.meta.table === "directus_files"
         ) {
-            if(field.meta.type === "item" && field.data.url){
+            if (field.meta.type === "item" && field.data.url) {
                 return this.renameFile(field);
-            }
-            else if(field.meta.type === "collection"){
-                if(field.data && field.data.length) {
+            } else if (field.meta.type === "collection") {
+                if (field.data && field.data.length) {
                     console.log(`parse /${field.data.length} files!`);
                     for (let file in field.data) {
                         let subfile = this.renameFile(field.data[file]);
@@ -102,27 +101,24 @@ class DirectusDownload {
                 }
                 return field;
             }
-        }
-        else if(field && field.storage_adapter){
+        } else if (field && field.storage_adapter) {
             return this.renameFile(field);
-        }
-        else {
+        } else {
             return field;
         }
     }
 
-    renameFile(field){
+    renameFile(field) {
         let url = field.url
-        if(field.data && field.data.url) {
+        if (field.data && field.data.url) {
             url = field.data.url;
         }
         let externalUrl = this.opts.baseUrl + url;
 
         let filename;
-        if(field.data && field.data.url) {
+        if (field.data && field.data.url) {
             filename = field.data.name;
-        }
-        else{
+        } else {
             filename = field.name;
         }
 
@@ -135,17 +131,15 @@ class DirectusDownload {
         });
 
         //set image url to local path
-        if(field.data && field.data.url) {
+        if (field.data && field.data.url) {
             field.data.url = localBookPath;
-        }
-        else {
+        } else {
             field.url = localBookPath;
         }
 
         if (this.opts.useImageObjects || this.opts.fieldbookCompatible) {
             return field;
-        }
-        else {
+        } else {
             return localBookPath;
         }
     }
@@ -155,6 +149,20 @@ class DirectusDownload {
 
         for (let media of this.media) {
             downloads.push((downloadCallback) => {
+                //Currently accepted thumbnail sizes, only square thumbs are currently supported
+                const thumbnailSizes = [200, 400, 800];
+
+                let parseThumbnailUrl = function (url, size) {
+                    if (url && url.includes('https://labs.volkskrant.nl/directus/storage/uploads/')) {
+                        return url.replace('https://labs.volkskrant.nl/directus/storage/uploads/', `https://labs.volkskrant.nl/directus/thumbnail/${size}/${size}/`)
+                    } else {
+                        return url
+                    }
+                };
+
+                let needsThumbnail = thumbnailSizes.includes(this.opts.downloadThumbnails);
+                let thumbnailPath = parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails);
+
                 this.fileExists(media.localPath, (pathExists) => {
                     if (pathExists) {
                         console.log(`Skipping ${media.filename}, exists`);
@@ -166,32 +174,24 @@ class DirectusDownload {
                             console.log(`Downloaded '${media.externalUrl}'`);
                         });
 
-                        // Also download thumbnails if user wants to
-
-                        //Currently accepted thumbnail sizes, only square thumbs are currently supported
-                        const thumbnailSizes = [200,400,800];
-
-                        let parseThumbnailUrl = function(url, size) {
-                            if(url && url.includes('https://labs.volkskrant.nl/directus/storage/uploads/')) {
-                                return url.replace('https://labs.volkskrant.nl/directus/storage/uploads/', `https://labs.volkskrant.nl/directus/thumbnail/${size}/${size}/`)
-                            } else {
-                                return url
-                            }
-                        };
-
-                        if(thumbnailSizes.includes(this.opts.downloadThumbnails)) {
-                            console.log(`Going to download thumbnail for ${media.externalUrl}`);
-
-                            new Download().get(parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
-                                console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
-                            });
-                        } else {
-                            console.log(`Thumbnailing at size ${this.opts.downloadThumbnails} is currently not supported, use one of the following instead: ${thumbnailSizes}`)
-                        }
-
                         downloadCallback();
                     }
                 });
+
+                if (needsThumbnail) {
+                    this.fileExists(thumbnailPath, pathExists => {
+                        if (pathExists) {
+                            console.log(`Skipping thumbnail ${thumbnailPath}, exists`);
+                            downloadCallback();
+                        } else {
+                            console.log(`Going to download thumbnail for ${media.externalUrl}`);
+
+                            new Download().get(thumbnailPath).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
+                                console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
+                            });
+                        }
+                    })
+                }
             });
         }
 
@@ -263,8 +263,7 @@ class DirectusDownload {
                         this.fetchComplete(res, item.name);
                     })
                     .catch(err => console.log(err));
-            }
-            else {
+            } else {
                 console.log(`getItems /${item}`);
 
                 this.client.getItems(item, params)
@@ -287,16 +286,14 @@ class DirectusDownload {
                 data[item] = {
                     data: this.parseRecursiveFiles(field.data)
                 }
-            }
-            else {
+            } else {
                 if (field.data && field.data.length) {
                     let fielddata = [];
                     for (let child in field.data) {
                         fielddata.push(this.parseFiles(child));
                     }
                     data[item] = fielddata;
-                }
-                else {
+                } else {
                     data[item] = this.parseFiles(field);
                 }
             }
@@ -349,16 +346,14 @@ class DirectusDownload {
 
                         });
                         fields[field] = childFields;
-                    }
-                    else {
+                    } else {
                         fields[field] = this.parseFiles(record[field]);
                     }
 
                 }
                 itemdata.push(fields);
             });
-        }
-        else {
+        } else {
             //single object
             if (this.opts.fieldbookCompatible) {
                 console.log('is fieldbook compatible');
@@ -372,8 +367,7 @@ class DirectusDownload {
                         'key': field,
                         'value': this.parseFiles(res.data[field])
                     });
-                }
-                else {
+                } else {
                     if (res.data[field] && res.data[field].meta && res.data[field].meta.type && res.data[field].meta.type === 'collection') {
                         let childcontent = {};
 
@@ -396,8 +390,7 @@ class DirectusDownload {
                             childcontent[child] = this.parseFiles(res.data[field].data[child]);
                         }
                         fields[field] = {data: childcontent};
-                    }
-                    else fields[field] = this.parseFiles(res.data[field]);
+                    } else fields[field] = this.parseFiles(res.data[field]);
                 }
 
             }
