@@ -11,9 +11,9 @@ dsdownload({
     baseUrl: 'https://labs.volkskrant.nl',
     apiUrl: 'https://labs.volkskrant.nl/directus/',
     accessToken: false, // only required when requesting non-publically available endpoints
-    downloadThumbnails: 400,
+    downloadThumbnails: 800,
     items: [
-        'aarsman' // when requesting all rows
+        'alternatieve_reisgids' // when requesting all rows
     ],
     callback: function () {
         console.log('this is ready');

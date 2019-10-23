@@ -166,23 +166,21 @@ class DirectusDownload {
                 this.fileExists(media.localPath, (pathExists) => {
                     if (pathExists) {
                         console.log(`Skipping ${media.filename}, exists`);
-                        downloadCallback();
                     } else {
                         console.log(`Going to download ${media.externalUrl}`);
 
                         new Download().get(media.externalUrl).dest(this.opts.mediaPath).rename(media.filename).run(() => {
                             console.log(`Downloaded '${media.externalUrl}'`);
                         });
-
-                        downloadCallback();
                     }
                 });
 
                 if (needsThumbnail) {
-                    this.fileExists(thumbnailPath, pathExists => {
+                    let localThumbnailPath = media.localPath.replace('media/', `media/thumbnails/${this.opts.downloadThumbnails}/thumbnail-${this.opts.downloadThumbnails}-`);
+
+                    this.fileExists(localThumbnailPath, (pathExists) => {
                         if (pathExists) {
-                            console.log(`Skipping thumbnail ${thumbnailPath}, exists`);
-                            downloadCallback();
+                            console.log(`Skipping thumbnail size ${this.opts.downloadThumbnails} for ${media.filename}, exists`);
                         } else {
                             console.log(`Going to download thumbnail for ${media.externalUrl}`);
 
@@ -192,6 +190,8 @@ class DirectusDownload {
                         }
                     })
                 }
+
+                downloadCallback();
             });
         }
 
