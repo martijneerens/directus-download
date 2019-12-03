@@ -20,6 +20,7 @@ const defaultOpts = {
     skipExistingFiles: true,
     prettifyJson: false,
     sort: false,
+    order: null,
     depth: 10,
     limit: 10000,
     downloadThumbnails: 400
@@ -245,8 +246,9 @@ class DirectusDownload {
 
         let params = {
             depth: this.opts.depth,
-            limit: this.opts.limit
+            limit: this.opts.limit,
         }
+
 
         //only pass accesstoken when available in config
         if (this.opts.accessToken) {
@@ -267,10 +269,12 @@ class DirectusDownload {
             } else {
                 console.log(`getItems /${item}`);
 
-                //only sort when querying for multiple items
                 if(this.opts.sort){
-                    params.sort = this.opts.sort;
+                    let order = 'asc';
+                    if(this.opts.order) order = this.opts.order;
+                    params[`order[${this.opts.sort}]`] = order;
                 }
+
 
                 this.client.getItems(item, params)
                     .then(res => {

@@ -12,7 +12,8 @@ dsdownload({
     apiUrl: 'https://labs.volkskrant.nl/directus/',
     accessToken: false, // only required when requesting non-publically available endpoints
     downloadThumbnails: 800,
-    sort: 'date',
+    order: 'desc',
+    sort: 'id',
     items: [
         'alternatieve_reisgids' // when requesting all rows
     ],
