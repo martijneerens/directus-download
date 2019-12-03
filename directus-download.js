@@ -19,6 +19,7 @@ const defaultOpts = {
     accessToken: false,
     skipExistingFiles: true,
     prettifyJson: false,
+    sort: false,
     depth: 10,
     limit: 10000,
     downloadThumbnails: 400
@@ -265,6 +266,11 @@ class DirectusDownload {
                     .catch(err => console.log(err));
             } else {
                 console.log(`getItems /${item}`);
+
+                //only sort when querying for multiple items
+                if(this.opts.sort){
+                    params.sort = this.opts.sort;
+                }
 
                 this.client.getItems(item, params)
                     .then(res => {
