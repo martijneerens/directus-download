@@ -1,5 +1,5 @@
 const fs = require('fs');
-const Download = require('download');
+const download = require('download');
 const async = require('async');
 const Papa = require('papaparse');
 const RemoteInstance = require('directus-sdk-javascript/remote');
@@ -149,6 +149,11 @@ class DirectusDownload {
     downloadMedia() {
         let downloads = [];
 
+        //check if media folder exists
+        if (!fs.existsSync(this.opts.mediaPath)){
+            fs.mkdirSync(this.opts.mediaPath);
+        }
+
         for (let media of this.media) {
             downloads.push((downloadCallback) => {
                 //Currently accepted thumbnail sizes, only square thumbs are currently supported
@@ -171,9 +176,13 @@ class DirectusDownload {
                     } else {
                         console.log(`Going to download ${media.externalUrl}`);
 
-                        new Download().get(media.externalUrl).dest(this.opts.mediaPath).rename(media.filename).run(() => {
-                            console.log(`Downloaded '${media.externalUrl}'`);
-                        });
+
+                        try {
+                             download(media.externalUrl).pipe(fs.createWriteStream(this.opts.mediaPath + media.filename));
+                        }
+                        catch(error) {
+                            console.error(error);
+                        }
                     }
                 });
 
@@ -186,14 +195,30 @@ class DirectusDownload {
                         } else {
                             console.log(`Going to download thumbnail for ${media.externalUrl}`);
 
-                            new Download().get(thumbnailPath).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
-                                console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
-                            });
+                            const p = `${this.opts.mediaPath}thumbnails`;
+                            if (!fs.existsSync(p)){
+                                fs.mkdirSync(p);
+                            }
+                            const tp = `${this.opts.mediaPath}thumbnails/${this.opts.downloadThumbnails}`;
+                            if (!fs.existsSync(tp)){
+                                fs.mkdirSync(tp);
+                            }
+
+                            try {
+                                 download(thumbnailPath).pipe(fs.createWriteStream(`${this.opts.mediaPath}thumbnails/${this.opts.downloadThumbnails}/thumbnail-${this.opts.downloadThumbnails}-${media.filename}`));
+                            }
+                            catch(error) {
+                                console.error(error);
+                            }
+
+                            // new Download().get(thumbnailPath).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
+                            //     console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
+                            // });
                         }
                     })
-                }
 
-                downloadCallback();
+
+                }          downloadCallback();
             });
         }
 
@@ -225,6 +250,11 @@ class DirectusDownload {
 
     writeJson() {
         let itemJson = this.stringifyJson(this.data);
+
+        //check if data folder exists
+        if (!fs.existsSync('./data')){
+            fs.mkdirSync('./data');
+        }
 
         return new Promise((resolve, reject) => {
             fs.writeFile(this.opts.dataPath, itemJson, 'utf-8', (err, written) => {

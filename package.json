@@ -4,9 +4,9 @@
   "version": "1.0.17",
   "main": "directus-download.js",
   "dependencies": {
-    "async": "^1.5.2",
+    "async": "3.2.0",
     "directus-sdk-javascript": "2.11.1",
-    "download": "^4.4.3",
+    "download": "8.0.0",
     "grunt": "^1.0.2",
     "node-fetch": "^2.3.0",
     "papaparse": "^4.1.2"
