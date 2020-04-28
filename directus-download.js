@@ -210,10 +210,6 @@ class DirectusDownload {
                             catch(error) {
                                 console.error(error);
                             }
-
-                            // new Download().get(thumbnailPath).dest(`${this.opts.mediaPath}/thumbnails/${this.opts.downloadThumbnails}/`).rename(`thumbnail-${this.opts.downloadThumbnails}-${media.filename}`).run(() => {
-                            //     console.log(`Downloaded thumbnail ${parseThumbnailUrl(media.externalUrl, this.opts.downloadThumbnails)}`);
-                            // });
                         }
                     })
 
