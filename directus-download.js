@@ -160,8 +160,8 @@ class DirectusDownload {
                 const thumbnailSizes = [200, 400, 800];
 
                 let parseThumbnailUrl = function (url, size) {
-                    if (url && url.includes('https://labs.volkskrant.nl/directus/storage/uploads/')) {
-                        return url.replace('https://labs.volkskrant.nl/directus/storage/uploads/', `https://labs.volkskrant.nl/directus/thumbnail/${size}/${size}/`)
+                    if (url && url.includes('/directus/storage/uploads/')) {
+                        return url.replace('/directus/storage/uploads/', `/directus/thumbnail/${size}/${size}/`)
                     } else {
                         return url
                     }
