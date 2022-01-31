@@ -8,8 +8,8 @@ dsdownload({
     prettifyJson: false,
     skipExistingFiles: true,
     useImageObjects: true, //return full directus file object instead of the url as a string only
-    baseUrl: 'https://labs.volkskrant.nl',
-    apiUrl: 'https://labs.volkskrant.nl/directus/',
+    baseUrl: 'https://example.com',
+    apiUrl: 'https://example.com/directus/',
     accessToken: false, // only required when requesting non-publically available endpoints
     downloadThumbnails: 800,
     order: 'desc',
